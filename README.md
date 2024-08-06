@@ -51,3 +51,6 @@ python server.py
 
 Usage
 Simply open the dashboard in your web browser. The page will automatically fetch and display the current Wi-Fi data and visible network information. Use the "View Detailed Stats" button to toggle additional network details.
+
+<img width="960" alt="image" src="https://github.com/user-attachments/assets/b4b07c3c-f184-4de9-bdc3-eca0a9c5c02e">
+

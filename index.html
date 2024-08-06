@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wi-Fi Information Dashboard</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f8f9fa; }
+        .container { max-width: 1000px; margin-top: 20px; }
+        .card { margin-bottom: 20px; }
+        #details { display: none; }
+        .btn-info { margin-top: 10px; }
+        canvas { max-width: 100%; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center">Wi-Fi Information Dashboard</h1>
+        <div class="card">
+            <div class="card-body">
+                <h2>Current Wi-Fi Info</h2>
+                <p id="timestamp"></p>
+                <p id="SSID"></p>
+                <p id="signal_strength"></p>
+                <p id="BSSID"></p>
+                <button id="toggleDetails" class="btn btn-info">View Detailed Stats</button>
+                <div id="details" class="mt-3">
+                    <h3>Detailed Wi-Fi Stats</h3>
+                    <p id="network_type"></p>
+                    <p id="radio_type"></p>
+                    <p id="auth"></p>
+                    <p id="cipher"></p>
+                    <p id="band"></p>
+                    <p id="channel"></p>
+                    <p id="receive_rate"></p>
+                    <p id="transmit_rate"></p>
+                    <p id="profile"></p>
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-body">
+                <h2>Visible Networks - Signal Strength and Channel</h2>
+                <canvas id="signalStrengthChart"></canvas>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-body">
+                <h2>Visible Networks - Channel</h2>
+                <canvas id="channelChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function fetchWifiData() {
+            try {
+                const response = await fetch('/api/wifi');
+                const data = await response.json();
+                document.getElementById('timestamp').innerText = `Timestamp: ${new Date().toLocaleString()}`;
+                document.getElementById('SSID').innerText = `SSID: ${data.SSID || 'Not available'}`;
+                document.getElementById('signal_strength').innerText = `Signal Strength: ${data['Signal Strength'] || 'Not available'}`;
+                document.getElementById('BSSID').innerText = `BSSID: ${data.BSSID || 'Not available'}`;
+
+                document.getElementById('network_type').innerText = `Network Type: ${data['Network Type'] || 'Not available'}`;
+                document.getElementById('radio_type').innerText = `Radio Type: ${data['Radio Type'] || 'Not available'}`;
+                document.getElementById('auth').innerText = `Authentication: ${data['Authentication'] || 'Not available'}`;
+                document.getElementById('cipher').innerText = `Cipher: ${data['Cipher'] || 'Not available'}`;
+                document.getElementById('band').innerText = `Band: ${data['Band'] || 'Not available'}`;
+                document.getElementById('channel').innerText = `Channel: ${data['Channel'] || 'Not available'}`;
+                document.getElementById('receive_rate').innerText = `Receive Rate: ${data['Receive Rate'] || 'Not available'}`;
+                document.getElementById('transmit_rate').innerText = `Transmit Rate: ${data['Transmit Rate'] || 'Not available'}`;
+                document.getElementById('profile').innerText = `Profile: ${data['Profile'] || 'Not available'}`;
+            } catch (error) {
+                console.error('Error fetching Wi-Fi data:', error);
+            }
+        }
+
+        async function fetchNetworkData() {
+            try {
+                const response = await fetch('/api/networks');
+                const data = await response.json();
+
+                const labels = data.map(network => network.SSID);
+                const signalStrength = data.map(network => parseFloat(network['Signal Strength']) || 0);
+                const channels = data.map(network => parseFloat(network['Channel']) || 0);
+
+                // Signal Strength and Channel Chart
+                const signalStrengthCtx = document.getElementById('signalStrengthChart').getContext('2d');
+                new Chart(signalStrengthCtx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Signal Strength (%)',
+                            data: signalStrength,
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                            fill: false,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Channel',
+                            data: channels,
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                            fill: false,
+                            yAxisID: 'y1'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                type: 'linear',
+                                position: 'left',
+                                title: {
+                                    display: true,
+                                    text: 'Signal Strength (%)'
+                                }
+                            },
+                            y1: {
+                                type: 'linear',
+                                position: 'right',
+                                title: {
+                                    display: true,
+                                    text: 'Channel'
+                                },
+                                grid: {
+                                    drawOnChartArea: false
+                                }
+                            },
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Network SSID'
+                                }
+                            }
+                        }
+                    }
+                });
+
+                // Channel Chart
+                const channelCtx = document.getElementById('channelChart').getContext('2d');
+                new Chart(channelCtx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Channel',
+                            data: channels,
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                            fill: false,
+                            tension: 0.1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Channel'
+                                }
+                            },
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Network SSID'
+                                }
+                            }
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('Error fetching network data:', error);
+            }
+        }
+
+        document.getElementById('toggleDetails').addEventListener('click', function() {
+            const details = document.getElementById('details');
+            const btn = document.getElementById('toggleDetails');
+            if (details.style.display === 'none') {
+                details.style.display = 'block';
+                btn.textContent = 'Hide Detailed Stats';
+            } else {
+                details.style.display = 'none';
+                btn.textContent = 'View Detailed Stats';
+            }
+        });
+
+        fetchWifiData();  // Fetch data on page load
+        fetchNetworkData();  // Fetch network data on page load
+        setInterval(fetchWifiData, 30000);  // Refresh data every 30s
+        setInterval(fetchNetworkData, 30000);  // Refresh network data every 30s
+    </script>
+</body>
+</html>

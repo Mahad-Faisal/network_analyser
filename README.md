@@ -26,7 +26,7 @@ In areas with many competing networks, it's common to experience degraded perfor
 
 ### Prerequisites
 
-- Python 3.x
+- Python 3.x (I used 3.8.3)
 - Flask
 
 ### Installation

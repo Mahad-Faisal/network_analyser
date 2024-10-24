@@ -3,6 +3,14 @@ import subprocess
 
 app = Flask(__name__)
 
+def run_netsh_command(command):
+    """Run netsh command and return output or None on failure."""
+    try:
+        result = subprocess.run(command, capture_output=True, text=True, check=True)
+        return result.stdout
+    except subprocess.CalledProcessError:
+        return None
+
 def get_windows_wifi_data():
     wifi_data = {}
     try:
@@ -10,30 +18,31 @@ def get_windows_wifi_data():
         output = result.stdout
         lines = output.splitlines()
         for line in lines:
-            if 'SSID' in line:
-                wifi_data['SSID'] = line.split(':')[1].strip()
+            line = line.strip()  # Remove leading/trailing whitespace
+            if 'SSID' in line and 'BSSID' not in line:  # To avoid BSSID being caught as SSID
+                wifi_data['SSID'] = line.split(':', 1)[1].strip()
             elif 'Signal' in line:
-                wifi_data['Signal Strength'] = line.split(':')[1].strip()
+                wifi_data['Signal Strength'] = line.split(':', 1)[1].strip()
             elif 'BSSID' in line:
-                wifi_data['BSSID'] = line.split(':')[1].strip()
+                wifi_data['BSSID'] = line.split(':', 1)[1].strip()
             elif 'Network type' in line:
-                wifi_data['Network Type'] = line.split(':')[1].strip()
+                wifi_data['Network Type'] = line.split(':', 1)[1].strip()
             elif 'Radio type' in line:
-                wifi_data['Radio Type'] = line.split(':')[1].strip()
+                wifi_data['Radio Type'] = line.split(':', 1)[1].strip()
             elif 'Authentication' in line:
-                wifi_data['Authentication'] = line.split(':')[1].strip()
+                wifi_data['Authentication'] = line.split(':', 1)[1].strip()
             elif 'Cipher' in line:
-                wifi_data['Cipher'] = line.split(':')[1].strip()
+                wifi_data['Cipher'] = line.split(':', 1)[1].strip()
             elif 'Band' in line:
-                wifi_data['Band'] = line.split(':')[1].strip()
+                wifi_data['Band'] = line.split(':', 1)[1].strip()
             elif 'Channel' in line:
-                wifi_data['Channel'] = line.split(':')[1].strip()
+                wifi_data['Channel'] = line.split(':', 1)[1].strip()
             elif 'Receive rate' in line:
-                wifi_data['Receive Rate'] = line.split(':')[1].strip()
+                wifi_data['Receive Rate'] = line.split(':', 1)[1].strip()
             elif 'Transmit rate' in line:
-                wifi_data['Transmit Rate'] = line.split(':')[1].strip()
+                wifi_data['Transmit Rate'] = line.split(':', 1)[1].strip()
             elif 'Profile' in line:
-                wifi_data['Profile'] = line.split(':')[1].strip()
+                wifi_data['Profile'] = line.split(':', 1)[1].strip()
     except subprocess.CalledProcessError:
         wifi_data['error'] = 'Failed to fetch Wi-Fi data'
     return wifi_data
@@ -46,14 +55,15 @@ def get_visible_networks():
         lines = output.splitlines()
         current_network = {}
         for line in lines:
-            if 'SSID' in line:
+            line = line.strip()  # Clean up leading/trailing spaces
+            if 'SSID' in line and 'BSSID' not in line:
                 if current_network:
                     networks.append(current_network)
-                current_network = {'SSID': line.split(':')[1].strip()}
+                current_network = {'SSID': line.split(':', 1)[1].strip()}
             elif 'Signal' in line:
-                current_network['Signal Strength'] = line.split(':')[1].strip()
+                current_network['Signal Strength'] = line.split(':', 1)[1].strip()
             elif 'Channel' in line:
-                current_network['Channel'] = line.split(':')[1].strip()
+                current_network['Channel'] = line.split(':', 1)[1].strip()
         if current_network:
             networks.append(current_network)
     except subprocess.CalledProcessError:

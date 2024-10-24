@@ -7,20 +7,54 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f8f9fa; }
-        .container { max-width: 1000px; margin-top: 20px; }
-        .card { margin-bottom: 20px; }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f6f9;
+        }
+        .container {
+            max-width: 1000px;
+            margin-top: 30px;
+        }
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+        }
+        .card {
+            margin-bottom: 20px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+        }
+        .card-header {
+            background-color: #007bff;
+            color: white;
+            font-size: 1.25rem;
+            padding: 10px 20px;
+        }
         #details { display: none; }
-        .btn-info { margin-top: 10px; }
-        canvas { max-width: 100%; }
+        .btn-info {
+            margin-top: 10px;
+        }
+        canvas {
+            max-width: 100%;
+            margin: 20px 0;
+        }
+        .loading {
+            font-size: 1.2rem;
+            text-align: center;
+            margin: 20px 0;
+            color: #6c757d;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1 class="text-center">Wi-Fi Information Dashboard</h1>
+        
+        <!-- Wi-Fi Info Card -->
         <div class="card">
+            <div class="card-header">Current Wi-Fi Information</div>
             <div class="card-body">
-                <h2>Current Wi-Fi Info</h2>
                 <p id="timestamp"></p>
                 <p id="SSID"></p>
                 <p id="signal_strength"></p>
@@ -40,15 +74,21 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Visible Networks Signal Strength -->
         <div class="card">
+            <div class="card-header">Visible Networks - Signal Strength</div>
             <div class="card-body">
-                <h2>Visible Networks - Signal Strength and Channel</h2>
+                <div id="loading-signal" class="loading">Loading Signal Strength Data...</div>
                 <canvas id="signalStrengthChart"></canvas>
             </div>
         </div>
+        
+        <!-- Visible Networks Channel -->
         <div class="card">
+            <div class="card-header">Visible Networks - Channel</div>
             <div class="card-body">
-                <h2>Visible Networks - Channel</h2>
+                <div id="loading-channel" class="loading">Loading Channel Data...</div>
                 <canvas id="channelChart"></canvas>
             </div>
         </div>
@@ -63,7 +103,7 @@
                 document.getElementById('SSID').innerText = `SSID: ${data.SSID || 'Not available'}`;
                 document.getElementById('signal_strength').innerText = `Signal Strength: ${data['Signal Strength'] || 'Not available'}`;
                 document.getElementById('BSSID').innerText = `BSSID: ${data.BSSID || 'Not available'}`;
-
+                
                 document.getElementById('network_type').innerText = `Network Type: ${data['Network Type'] || 'Not available'}`;
                 document.getElementById('radio_type').innerText = `Radio Type: ${data['Radio Type'] || 'Not available'}`;
                 document.getElementById('auth').innerText = `Authentication: ${data['Authentication'] || 'Not available'}`;
@@ -82,6 +122,8 @@
             try {
                 const response = await fetch('/api/networks');
                 const data = await response.json();
+                document.getElementById('loading-signal').style.display = 'none';
+                document.getElementById('loading-channel').style.display = 'none';
 
                 const labels = data.map(network => network.SSID);
                 const signalStrength = data.map(network => parseFloat(network['Signal Strength']) || 0);
@@ -178,6 +220,8 @@
                 });
             } catch (error) {
                 console.error('Error fetching network data:', error);
+                document.getElementById('loading-signal').innerText = 'Error fetching data';
+                document.getElementById('loading-channel').innerText = 'Error fetching data';
             }
         }
 
@@ -195,8 +239,8 @@
 
         fetchWifiData();  // Fetch data on page load
         fetchNetworkData();  // Fetch network data on page load
-        setInterval(fetchWifiData, 30000);  // Refresh data every 30s
-        setInterval(fetchNetworkData, 30000);  // Refresh network data every 30s
+        setInterval(fetchWifiData, 60000);  // Refresh data every 60s
+        setInterval(fetchNetworkData, 60000);  // Refresh network data every 60s
     </script>
 </body>
 </html>

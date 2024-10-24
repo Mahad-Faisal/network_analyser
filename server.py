@@ -4,7 +4,6 @@ import subprocess
 app = Flask(__name__)
 
 def run_netsh_command(command):
-    """Run netsh command and return output or None on failure."""
     try:
         result = subprocess.run(command, capture_output=True, text=True, check=True)
         return result.stdout
